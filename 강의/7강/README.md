@@ -510,6 +510,93 @@ public class BasicItemController {
 `<td th:text="${item.price}"> 0 </td>`
 
 ## 상품 상세
+### BasicItemController 에 추가
+```java
+@Controller
+@RequestMapping("/basic/items")
+@RequiredArgsConstructor
+public class BasicItemController {
+    private final ItemRepository itemRepository;
+
+    @GetMapping("/{itemId}")
+    public String item(
+            @PathVariable Long itemId,
+            Model model
+    ) {
+        Item item = itemRepository.findById(itemId);
+        model.addAttribute("item", item);
+        return "basic/item";
+    }
+
+    /**
+     * 테스트용 데이터 추가
+     * 해당 빈의 의존관계가 모두 주입되고 나서 호출
+     */
+    @PostConstruct
+    public void init() {
+        itemRepository.save(new Item("testA", 10000, 10));
+        itemRepository.save(new Item("testB", 20000, 20));
+    }
+}
+```
+
+### 상품 상세 HTML
+```html
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <link href="../css/bootstrap.min.css"
+          th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <style>
+ .container {
+ max-width: 560px;
+ }
+ </style>
+</head>
+<body>
+<div class="container">
+    <div class="py-5 text-center">
+        <h2>상품 상세</h2>
+    </div>
+    <div>
+        <label for="itemId">상품 ID</label>
+        <input type="text" id="itemId" name="itemId" class="form-control"
+               value="1" th:value="${item.id}" readonly>
+    </div>
+    <div>
+        <label for="itemName">상품명</label>
+        <input type="text" id="itemName" name="itemName" class="form-control"
+               value="상품A" th:value="${item.itemName}" readonly>
+    </div>
+    <div>
+        <label for="price">가격</label>
+        <input type="text" id="price" name="price" class="form-control"
+               value="10000" th:value="${item.price}" readonly>
+    </div>
+    <div>
+        <label for="quantity">수량</label>
+        <input type="text" id="quantity" name="quantity" class="form-control"
+               value="10" th:value="${item.quantity}" readonly>
+    </div>
+    <hr class="my-4">
+    <div class="row">
+        <div class="col">
+            <button class="w-100 btn btn-primary btn-lg"
+                    onclick="location.href='editForm.html'"
+                    th:onclick="|location.href='@{/basic/items/{itemId}/edit(itemId=${item.id})}'|" type="button">상품 수정</button>
+        </div>
+        <div class="col">
+            <button class="w-100 btn btn-secondary btn-lg"
+                    onclick="location.href='items.html'"
+                    th:onclick="|location.href='@{/basic/items}'|"
+                    type="button">목록으로</button>
+        </div>
+    </div>
+</div> <!-- /container -->
+</body>
+</html>
+```
 
 ## 상품 등록 폼
 

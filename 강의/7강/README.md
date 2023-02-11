@@ -919,5 +919,58 @@ public class BasicItemController {
 > * 이유는 URL 인코딩이 안되기 떄문인데, 이는 `RedirectAttribute`를 사용하여 해결하자.
 
 ## RedirectAttribute
+* 상품을 저장하고 상품 상세 화면으로 리다이렉트한 것 까지는 좋았다.
+* 하지만 고객 입장에서 저장이 잘 된 것인지 안 된 것인지 확신이 들지않는다.
+* 그래서 저장이 잘 되었으면 상품 상세 화면에 "저장되었습니다"라는 메시지를 보여달라는 요구사항이 왔다.
+
+### BasicItemController 에 추가
+```java
+@Controller
+@RequestMapping("/basic/items")
+@RequiredArgsConstructor
+public class BasicItemController {
+  private final ItemRepository itemRepository;
+  
+/*
+  @PostMapping("/add")
+  public String addItemV3(
+          @ModelAttribute Item item
+  ) {
+    itemRepository.save(item);
+    return "redirect:/basic/items/" + item.getId();
+  }
+*/
+  @PostMapping("/add")
+  public String addItemV6(
+          @ModelAttribute Item item,
+          RedirectAttributes redirectAttributes
+  ) {
+    Item savedItem = itemRepository.save(item);
+    redirectAttributes.addAttribute("itemId", savedItem.getId());
+    redirectAttributes.addAttribute("status", true);
+    return "redirect:/basic/items/{itemId}";
+  }
+}
+```
+![img_8.png](img_8.png)
+* `ReirectAttribute`는 **URL Encoding + PathVariable + Query Parameter** 까지 처리해준다.
+* `redirectAttributes.addAttribute("itemId", savedItem.getId())`
+  * PathVariable 바인딩: `return "redirect:/basic/items/{itemId}"`
+* `redirectAttributes.addAttribute("status", true)`
+  * Query Parameter 처리: `?status=true`
+
+### 뷰 템플릿에 추가
+```html
+<div class="container">
+    <div class="py-5 text-center">
+        <h2>상품 상세</h2>
+    </div>
+
+    <!-- Alert 추가 -->
+    <h2 th:if="${param.status}" th:text="'저장 완료'"></h2>
+</div>
+```
+* `th:if`: 해당 조건이 참이면 실행
+* `${param.status}`: Query Parameter 조회
 
 ## 정리

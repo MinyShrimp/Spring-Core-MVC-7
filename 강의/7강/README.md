@@ -850,7 +850,7 @@ public class BasicItemController {
   public String edit(
           @PathVariable Long itemId,
           @ModelAttribute Item item
-  ) {
+  ) {정
     itemRepository.update(itemId, item);
     return "redirect:/basic/items/{itemId}";
   }
@@ -868,7 +868,55 @@ public class BasicItemController {
 > PUT, PATCH는 HTTP API 전송시에 사용
 > 스프링에서 HTTP POST로 Form 요청할 때 히든 필드를 통해서 PUT, PATCH 매핑을 사용하는 방법이 있지만, HTTP 요청상 POST 요청이다.
 
-## PRG Post/Redirect/Get
+## PRG Post-Redirect-Get
+* 사실 지금까지 진행한 상품 등록 처리 컨트롤러는 심각한 문제가 있다. (`addItem`)
+* 상품 등록을 완료하고 웹 브라우저의 새로고침 버튼을 클릭해보자.
+* 상품이 계속해서 중복 등록되는 것을 확인할 수 있다.
+
+### 전체 흐름
+![img_5.png](img_5.png)
+
+### POST 등록 후 새로 고침
+![img_6.png](img_6.png)
+* 웹 브라우저의 새로 고침은 마지막에 서버에 전송한 데이터를 다시 전송한다.
+* 상품 등록 폼에서 데이터를 입력하고 저장을 선택하면 `POST /add` + 상품 데이터를 서버로 전송한다.
+* 이 상태에서 새로 고침을 누르면 마지막에 전송된 `POST /add` + 상품 데이터를 서버로 다시 전송한다.
+* 그래서 내용은 같고, ID만 다른 상품 데이터가 계속 쌓이게 된다.
+
+### POST, Redirect GET
+![img_7.png](img_7.png)
+* 웹 브라우저의 새로 고침은 마지막에 서버에 전송한 데이터를 다시 전송한다.
+* 새로 고침 문제를 해결하려면 상품 저장 후에 뷰 템플릿으로 이동하는 것이 아니라, 상품 상세 화면으로 리다이렉트를 호출해주면 된다.
+* 웹 브라우저는 리다이렉트의 영향으로 상품 저장 후에 실제 상품 상세 화면으로 다시 이동한다.
+* 따라서 마지막에 호출한 내용이 상품 상세 화면인 `GET /items/{itemId}`가 되는 것이다.
+
+```java
+@Controller
+@RequestMapping("/basic/items")
+@RequiredArgsConstructor
+public class BasicItemController {
+  private final ItemRepository itemRepository;
+
+  @GetMapping("/add")
+  public String addItem() {
+    return "basic/addForm";
+  }
+
+  @PostMapping("/add")
+  public String addItemV3(
+          @ModelAttribute Item item
+  ) {
+    itemRepository.save(item);
+    return "redirect:/basic/items/" + item.getId();
+  }
+}
+```
+* 위와 같이 Post 이후 Redirect 를 이용해 Get 요청을 보내줘야 한다.
+* 이를 **Post-Redirect-Get, 줄여서 PRG** 라 한다.
+
+> **주의**<br>
+> * `"redirect:/basic/items/" + item.getId()`에서 `+ item.getId()`처럼 **URL에 변수를 더해서 사용하면 안된다.**
+> * 이유는 URL 인코딩이 안되기 떄문인데, 이는 `RedirectAttribute`를 사용하여 해결하자.
 
 ## RedirectAttribute
 

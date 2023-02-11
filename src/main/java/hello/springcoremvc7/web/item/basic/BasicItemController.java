@@ -6,10 +6,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,6 +38,14 @@ public class BasicItemController {
     @GetMapping("/add")
     public String addItem() {
         return "basic/addForm";
+    }
+
+    @PostMapping("/add")
+    public String addItemV3(
+            @ModelAttribute Item item
+    ) {
+        itemRepository.save(item);
+        return "basic/item";
     }
 
     /**

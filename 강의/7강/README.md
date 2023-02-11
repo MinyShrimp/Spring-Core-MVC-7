@@ -664,6 +664,101 @@ public class BasicItemController {
 ```
 
 ## 상품 등록 처리 - `@ModelAttribute`
+### POST - HTML Form
+* `Content-Type: applcation/x-www-form-urlencoded`
+* 메시지 바디에 쿼리 파라미터 형식으로 전달
+
+### 상품 등록 처리 V1
+```java
+@Controller
+@RequestMapping("/basic/items")
+@RequiredArgsConstructor
+public class BasicItemController {
+  private final ItemRepository itemRepository;
+
+  @PostMapping("/add")
+  public String addItemV1(
+          @RequestParam String itemName,
+          @RequestParam int price,
+          @RequestParam Integer quantity,
+          Model model
+  ) {
+    Item item = new Item(itemName, price, quantity);
+    itemRepository.save(item);
+    model.addAttribute("item", item);
+    return "basic/item";
+  }
+}
+```
+* 먼저 `@RequestParam String itemName`: itemName 요청 파라미터 데이터를 해당 변수에 받는다.
+* `Item` 객체를 생성해서 `itemRepository`를 통해서 저장한다.
+* 저장된 `item`을 `model`에 담아서 뷰에 전달한다.
+
+### 상품 등록 처리 V2
+```java
+@Controller
+@RequestMapping("/basic/items")
+@RequiredArgsConstructor
+public class BasicItemController {
+  private final ItemRepository itemRepository;
+
+  @PostMapping("/add")
+  public String addItemV2(
+          @ModelAttribute("item") Item item,
+          Model model
+  ) {
+    itemRepository.save(item);
+    // model.addAttribute("item", item); // 생략 가능
+    return "basic/item";
+  }
+}
+```
+* `Item`객체를 생성하고, 요청 파라미터의 값을 **프로퍼티 접근법**(setXxx)으로 입력한다.
+* `Model`에 `@ModelAttribute`에 **지정한 객체**(Item)를 자동으로 넣어준다.
+  * `model.addAttribute("item", item);`를 생략해도 된다.
+  * `@ModelAttribute(name = "hello") Item item`: 이름을 `hello`로 지정
+    * `model.addAttribute("hello", item);`과 같다.
+
+### 상품 등록 처리 V3
+```java
+@Controller
+@RequestMapping("/basic/items")
+@RequiredArgsConstructor
+public class BasicItemController {
+  private final ItemRepository itemRepository;
+
+  @PostMapping("/add")
+  public String addItemV3(
+          @ModelAttribute Item item
+  ) {
+    itemRepository.save(item);
+    return "basic/item";
+  }
+}
+```
+* `@ModelAttribute`의 name 인자를 생략해도 된다.
+* 이때, 변수명이 아닌, **Class 이름의 첫 글자만 소문자로 변경해서 등록**(Camel)한다.
+  * `Item` -> `item`
+  * `HelloWorld` -> `helloWorld`
+
+### 상품 등록 처리 V4
+```java
+@Controller
+@RequestMapping("/basic/items")
+@RequiredArgsConstructor
+public class BasicItemController {
+  private final ItemRepository itemRepository;
+
+  @PostMapping("/add")
+  public String addItemV4(
+          Item item
+  ) {
+    itemRepository.save(item);
+    return "basic/item";
+  }
+}
+```
+* `@ModelAttribute`를 생략할 수 있으나, 권장하지는 않는다.
 
 ## 상품 수정
 
